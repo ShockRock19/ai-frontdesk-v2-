@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Front-Desk — Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/dashboard.css"/>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><div class="brand-dot"></div> Front-Desk <small>v2</small></div>
+  <div class="spacer"></div>
+  <select id="bizSwitch" class="biz-switch"></select>
+  <button class="btn small primary" onclick="App.newBusiness()">+ New</button>
+  <button class="btn ghost small" onclick="App.logout()">Sign out</button>
+</div>
+<div class="wrap">
+  <nav class="sidebar">
+    <div class="nav-item active" data-tab="overview"><span class="icon">📊</span> Overview</div>
+    <div class="nav-item" data-tab="settings"><span class="icon">⚙️</span> Settings</div>
+    <div class="nav-item" data-tab="leads"><span class="icon">🔥</span> Leads <span class="nav-badge" id="badge-leads">0</span></div>
+    <div class="nav-item" data-tab="appointments"><span class="icon">📅</span> Calendar</div>
+    <div class="nav-item" data-tab="conversations"><span class="icon">💬</span> Conversations</div>
+    <div class="nav-item" data-tab="customers"><span class="icon">👥</span> Customers</div>
+    <div class="nav-item" data-tab="usage"><span class="icon">📈</span> Usage & Cost</div>
+    <div class="nav-item" data-tab="blocklist"><span class="icon">🚫</span> Blocklist</div>
+    <div class="nav-item" data-tab="connect"><span class="icon">🔗</span> Connect</div>
+  </nav>
+  <div class="content">
+    <div class="panel active" id="panel-overview">
+      <div id="tiles" class="tiles"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card"><h2>Today</h2><p class="sub">Real-time snapshot</p><div id="todayActivity"></div></div>
+        <div class="card"><h2>Lead Pipeline</h2><p class="sub">Recent qualified leads</p><div id="leadPipeline"></div></div>
+      </div>
+    </div>
+    <div class="panel" id="panel-settings">
+      <div class="card">
+        <h2>Business Profile</h2>
+        <p class="sub">Everything here shapes how your agent talks, qualifies, and books. No code required.</p>
+        <div class="form-grid" id="bizForm">
+          <div class="field"><label>Business name</label><input data-f="name"/></div>
+          <div class="field"><label>Industry</label><input data-f="industry" placeholder="real estate, insurance, dental…"/></div>
+          <div class="field full"><label>Description</label><textarea data-f="description"></textarea></div>
+          <div class="field"><label>Twilio number (E.164)</label><input data-f="twilio_number" placeholder="+15551234567"/><span class="hint">Inbound calls/texts route here.</span></div>
+          <div class="field"><label>Timezone</label><input data-f="timezone" placeholder="America/New_York"/></div>
+          <div class="field full"><label>Tone of voice</label><input data-f="tone" placeholder="warm, professional, never pushy"/></div>
+          <div class="field full"><label>Target market</label><textarea data-f="target_market"></textarea></div>
+          <div class="field full"><label>Services</label><textarea data-f="services"></textarea></div>
+          <div class="field full"><label>Lead qualification criteria</label><textarea data-f="qualification_criteria"></textarea></div>
+          <div class="field full"><label>Booking rules</label><textarea data-f="booking_instructions"></textarea></div>
+          <div class="field full"><label>FAQ</label><textarea data-f="faq"></textarea></div>
+          <div class="field full"><label>Custom greeting</label><input data-f="greeting"/></div>
+          <div class="field"><label>After-hours message</label><input data-f="after_hours_message" placeholder="We're closed but I can still help…"/></div>
+          <div class="field"><label>Max appts / day</label><input data-f="max_daily_appointments" type="number" placeholder="20"/></div>
+          <div class="field"><label>Reminder lead time (hrs)</label><input data-f="reminder_hours" type="number" placeholder="24"/></div>
+          <div class="field"><label>Owner phone (E.164)</label><input data-f="owner_phone"/></div>
+          <div class="field"><label>Owner email</label><input data-f="owner_email"/></div>
+          <div class="field full"><label>Webhook URL</label><input data-f="webhook_url" placeholder="https://your-crm.com/webhook"/><span class="hint">Receives signed events: lead.qualified, appointment.booked, etc.</span></div>
+          <div class="field full"><label>Webhook secret</label><input data-f="webhook_secret" placeholder="Leave blank to skip signing"/></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn primary" onclick="App.saveBusiness()">Save profile</button>
+          <button class="btn danger ghost small" onclick="App.deleteBusiness()">Delete</button>
+          <span class="saved-flash" id="savedFlash">Saved ✓</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Business Hours</h2>
+        <p class="sub">Agent detects after-hours calls and adjusts its message automatically.</p>
+        <div class="hours-grid" id="hoursGrid"></div>
+        <div class="form-actions"><button class="btn primary" onclick="App.saveHours()">Save hours</button><span class="saved-flash" id="hoursFlash">Saved ✓</span></div>
+      </div>
+    </div>
+    <div class="panel" id="panel-leads"><div class="card"><h2>Leads</h2><p class="sub">Captured and scored by the agent.</p><div id="leadsTable"></div></div></div>
+    <div class="panel" id="panel-appointments"><div class="card"><h2>Appointments</h2><p class="sub">Scheduled by the agent. Cancel or reschedule anytime.</p><div id="apptTable"></div></div></div>
+    <div class="panel" id="panel-conversations"><div class="card"><h2>Conversations</h2><p class="sub">Every call, text, and web chat. Click to read the full transcript.</p><div id="convTable"></div></div></div>
+    <div class="panel" id="panel-customers"><div class="card"><h2>Customers</h2><p class="sub">Everyone the agent has captured.</p><div id="custTable"></div></div></div>
+    <div class="panel" id="panel-usage"><div class="card"><h2>Usage & Cost</h2><p class="sub">Token consumption and estimated API cost — last 30 days.</p><div id="usageContent"></div></div></div>
+    <div class="panel" id="panel-blocklist">
+      <div class="card">
+        <h2>Blocklist</h2>
+        <p class="sub">Phone numbers and emails blocked from reaching the agent.</p>
+        <div class="form-actions" style="margin-bottom:16px;flex-wrap:wrap;">
+          <input id="blockPhone" placeholder="+1..." class="block-input"/>
+          <input id="blockEmail" placeholder="email@..." class="block-input"/>
+          <input id="blockReason" placeholder="Reason..." class="block-input"/>
+          <button class="btn primary small" onclick="App.addBlock()">+ Add</button>
+        </div>
+        <div id="blockTable"></div>
+      </div>
+    </div>
+    <div class="panel" id="panel-connect">
+      <div class="card"><h2>Connect Your Channels</h2><p class="sub">Point Twilio and your website at these endpoints.</p><div id="connectInfo"></div></div>
+      <div class="card"><h2>Change Password</h2><div class="field" style="max-width:320px;"><label>New password</label><input id="newPass" type="password"/></div><div class="form-actions"><button class="btn" onclick="App.changePassword()">Update</button><span class="saved-flash" id="pwFlash">Updated ✓</span></div></div>
+    </div>
+  </div>
+</div>
+<div class="drawer" id="drawer" onclick="if(event.target===this)App.closeDrawer()">
+  <div class="drawer-panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <h2 style="font-size:16px;font-weight:700;">Transcript</h2>
+      <button class="btn small ghost" onclick="App.closeDrawer()">✕</button>
+    </div>
+    <div id="transcriptMeta" style="font-size:11px;color:var(--ink2);font-family:var(--mono);margin-bottom:12px;"></div>
+    <div class="msg-wrap" id="transcript"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

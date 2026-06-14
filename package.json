@@ -1,0 +1,26 @@
+{
+  "name": "ai-frontdesk",
+  "version": "1.0.0",
+  "description": "AI front-desk agent: inbound Twilio calls + SMS + web chat, appointment booking, lead qualification, and a customizable per-business dashboard. Powered by Claude. OpenClaw-compatible.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "init-db": "node src/db/init.js",
+    "seed": "node src/db/seed.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "better-sqlite3": "^12.10.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.22.2",
+    "nanoid": "^5.0.7",
+    "nodemailer": "^6.9.14",
+    "twilio": "^5.3.0"
+  }
+}

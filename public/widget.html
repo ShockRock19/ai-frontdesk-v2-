@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Web chat demo — AI Front-Desk</title>
+<link rel="stylesheet" href="/css/dashboard.css" />
+</head>
+<body>
+<div class="wrap">
+  <div class="card" style="max-width:640px;margin:60px auto">
+    <h2>Web chat demo</h2>
+    <p class="sub">This page simulates your website. The chat bubble in the bottom-right is the live agent for the selected business — exactly what your visitors would see.</p>
+    <p style="color:var(--muted)">To embed on a real site, paste one line into the page HTML:</p>
+    <pre style="background:var(--ink);border:1px solid var(--line-strong);border-radius:10px;padding:14px;overflow:auto;font-size:13px"><code id="snippet"></code></pre>
+  </div>
+</div>
+<script>
+  // Business id comes from ?b=ID; falls back to a prompt.
+  var params = new URLSearchParams(location.search);
+  var biz = params.get('b');
+  if (!biz) { biz = prompt('Business id (from the dashboard Connect tab):') || ''; }
+  document.getElementById('snippet').textContent =
+    '<script src="' + location.origin + '/js/widget-embed.js" data-business="' + biz + '"><\/script>';
+  if (biz) {
+    var s = document.createElement('script');
+    s.src = '/js/widget-embed.js';
+    s.setAttribute('data-business', biz);
+    document.body.appendChild(s);
+  }
+</script>
+</body>
+</html>
