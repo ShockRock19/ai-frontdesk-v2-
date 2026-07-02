@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Northern Mississippi AI — Cloud Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E1A1F;
+    --panel:#13252C;
+    --panel-2:#0F1F25;
+    --surface:#FFFFFF;
+    --ink:#13212B;
+    --ink-soft:#46606C;
+    --line:#E2E9ED;
+    --line-dark:#21383F;
+    --primary:#0B5D6E;
+    --primary-d:#084A58;
+    --accent:#15A8C0;
+    --accent-soft:#7FD8E6;
+    --good:#1B9E6B;
+    --good-soft:#3FD68F;
+    --warn:#C98A00;
+    --alert:#CF4040;
+    --alert-soft:#FF8E8E;
+    --display:'Space Grotesk',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+  /* ===== Login ===== */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:radial-gradient(120% 90% at 50% 0,#163039 0%,var(--bg) 60%);}
+  .login-card{width:100%;max-width:400px;background:var(--surface);border-radius:20px;padding:34px 30px;box-shadow:0 30px 70px rgba(0,0,0,.4)}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .brand .mark{width:42px;height:42px;border-radius:11px;background:linear-gradient(150deg,var(--primary),var(--accent));display:grid;place-items:center;color:#fff;font-family:var(--display);font-weight:700;font-size:17px}
+  .brand h1{font-family:var(--display);font-size:17px;font-weight:600;line-height:1.15;color:var(--ink)}
+  .brand span{font-size:11px;color:var(--ink-soft)}
+  .login-card .lede{font-size:13px;color:var(--ink-soft);margin:14px 0 22px;line-height:1.5}
+  .role-pick{display:flex;gap:8px;background:#EEF3F5;padding:5px;border-radius:12px;margin-bottom:18px}
+  .role-pick button{flex:1;border:0;background:transparent;font-family:var(--body);font-weight:600;font-size:13px;color:var(--ink-soft);padding:9px;border-radius:9px;cursor:pointer}
+  .role-pick button.on{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+  .field input,.field select,.field textarea{width:100%;font-family:var(--body);font-size:14px;color:var(--ink);border:1px solid var(--line);background:#fff;border-radius:11px;padding:12px 13px;outline:none}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(21,168,192,.15)}
+  .btn{width:100%;border:0;background:var(--primary);color:#fff;font-family:var(--body);font-weight:600;font-size:14px;padding:13px;border-radius:12px;cursor:pointer;transition:background .12s}
+  .btn:hover{background:var(--primary-d)}
+  .btn.ghost{background:#fff;color:var(--primary);border:1px solid var(--line)}
+  .btn.ghost:hover{background:#F4F8F9}
+  .btn.small{width:auto;padding:9px 15px;font-size:13px}
+  .btn.dark{background:#13252C}
+  .login-hint{font-size:11px;color:var(--ink-soft);text-align:center;margin-top:16px;line-height:1.5}
+
+  /* ===== App shell ===== */
+  #app{display:none;min-height:100vh;flex-direction:column}
+  .topbar{background:var(--panel);border-bottom:1px solid var(--line-dark);padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20}
+  .topbar .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(150deg,var(--primary),var(--accent));display:grid;place-items:center;color:#fff;font-family:var(--display);font-weight:700;font-size:14px}
+  .topbar .who{color:#fff}
+  .topbar .who b{font-family:var(--display);font-size:14px;font-weight:600;display:block;line-height:1.1}
+  .topbar .who small{font-size:11px;color:var(--accent-soft)}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .role-tag{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:rgba(21,168,192,.18);color:var(--accent-soft)}
+  .role-tag.admin{background:rgba(201,138,0,.2);color:#FFD27A}
+  .link-btn{background:transparent;border:0;color:#9FB6BF;font-family:var(--body);font-size:13px;font-weight:500;cursor:pointer}
+  .link-btn:hover{color:#fff}
+
+  /* connection status strip */
+  .conn-strip{background:var(--panel-2);border-bottom:1px solid var(--line-dark);padding:9px 20px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;color:#8AA6AF}
+  .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--alert);box-shadow:0 0 0 3px rgba(207,64,64,.2)}
+  .conn-dot.live{background:var(--good-soft);box-shadow:0 0 0 3px rgba(63,214,143,.2)}
+
+  .wrap{flex:1;max-width:980px;width:100%;margin:0 auto;padding:24px 20px 60px}
+
+  /* tabs */
+  .tabs{display:flex;gap:6px;background:var(--panel);padding:6px;border-radius:14px;margin-bottom:22px;flex-wrap:wrap}
+  .tabs button{border:0;background:transparent;font-family:var(--body);font-weight:600;font-size:13.5px;color:#9FB6BF;padding:11px 18px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .tabs button.on{background:var(--surface);color:var(--primary)}
+  .tabs button .count{font-family:var(--mono);font-size:11px;background:rgba(11,93,110,.12);color:var(--primary);padding:1px 7px;border-radius:999px}
+  .tabs button:not(.on) .count{background:rgba(255,255,255,.1);color:#9FB6BF}
+
+  .card{background:var(--surface);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.18);overflow:hidden;margin-bottom:18px}
+  .card-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+  .card-head h2{font-family:var(--display);font-size:15px;font-weight:600}
+  .card-head p{font-size:12px;color:var(--ink-soft);margin-top:2px}
+  .card-head .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .card-body{padding:18px}
+  .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--accent)}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .three{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}
+  .four{display:grid;grid-template-columns:1.6fr 1.4fr 1fr 1fr;gap:10px}
+  @media(max-width:640px){.two,.three,.four{grid-template-columns:1fr}}
+
+  /* CSV dropzone */
+  .drop{border:2px dashed var(--line);border-radius:14px;padding:24px;text-align:center;background:#F7FAFB;cursor:pointer;transition:.15s}
+  .drop:hover{border-color:var(--accent);background:#F0F8FA}
+  .drop.drag{border-color:var(--accent);background:#E8F6F9}
+  .drop svg{width:30px;height:30px;stroke:var(--primary);margin-bottom:8px}
+  .drop b{font-size:14px;display:block}
+  .drop span{font-size:12px;color:var(--ink-soft)}
+  .drop input{display:none}
+
+  /* data table */
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-soft);font-weight:700;padding:10px 12px;border-bottom:2px solid var(--line);position:sticky;top:0;background:#fff}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  td.mono{font-family:var(--mono);font-size:12px;color:var(--primary)}
+  .row-del{width:26px;height:26px;border:0;background:transparent;color:#B7C4CB;font-size:18px;cursor:pointer;border-radius:6px}
+  .row-del:hover{background:#FBE9E9;color:var(--alert)}
+  .empty{padding:30px;text-align:center;color:var(--ink-soft);font-size:13px}
+
+  .cat-tag{font-family:var(--mono);font-size:11px;font-weight:700;background:#EAF1F3;color:var(--primary);padding:2px 7px;border-radius:5px}
+  .role-pill{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:#EEF3F5;color:var(--ink-soft)}
+
+  /* A-Z rail */
+  .az{display:flex;flex-wrap:wrap;gap:3px;padding:10px 14px;border-bottom:1px solid var(--line);background:#FAFCFD}
+  .az button{width:24px;height:24px;border:0;background:transparent;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-soft);border-radius:6px;cursor:pointer}
+  .az button:hover{background:#E6EEF0;color:var(--primary)}
+  .az button.empty-letter{color:#CBD5D9;cursor:default}
+  .az button.empty-letter:hover{background:transparent}
+  .alpha-head{padding:8px 12px;background:#F2F6F8;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--primary);letter-spacing:1px;border-bottom:1px solid var(--line)}
+
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:#13252C;color:#fff;padding:12px 20px;border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .note{font-size:11.5px;color:var(--ink-soft);line-height:1.5;background:#F2F6F8;border-radius:10px;padding:11px 13px;margin-top:12px}
+  .admin-only{border:1px solid var(--warn);border-radius:14px;background:#FFFBF2}
+
+  .pushbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .pushbar .status{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);margin-right:auto}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="login-card">
+    <div class="brand">
+      <div class="mark">NM</div>
+      <div><h1>Northern Mississippi AI</h1><span>Cloud parts &amp; contacts</span></div>
+    </div>
+    <p class="lede">Sign in to manage your company's parts list and phone contacts. Changes save to your cloud account.</p>
+    <div class="role-pick">
+      <button id="rClient" class="on" onclick="pickRole('client')">Client login</button>
+      <button id="rAdmin" onclick="pickRole('admin')">Administrator</button>
+    </div>
+    <div class="field"><label id="userLabel">Company name</label>
+      <input id="loginUser" placeholder="e.g. Apex Heating &amp; Air"></div>
+    <div class="field"><label>Password</label>
+      <input id="loginPass" type="password" placeholder="••••••••"></div>
+    <button class="btn" onclick="doLogin()">Sign in</button>
+    <p class="login-hint" id="loginHint">Clients can view and correct their parts and contacts, add single entries, or upload a spreadsheet.</p>
+    <p class="login-hint" id="forgotRow" style="margin-top:8px"><button class="link-btn" style="color:var(--primary);font-weight:600" onclick="showForgotPassword()">Forgot password?</button></p>
+  </div>
+</div>
+
+<!-- ============ FORGOT PASSWORD (client self-service reset) ============ -->
+<div id="forgotPass" style="display:none;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(120% 90% at 50% 0,#163039 0%,var(--bg) 60%);">
+  <div class="login-card">
+    <div class="brand">
+      <div class="mark">NM</div>
+      <div><h1>Reset your password</h1><span>We'll email you a new temporary one</span></div>
+    </div>
+    <p class="lede">Enter your company name and we'll send a new temporary password to the email on file. You'll be asked to set your own password the next time you sign in.</p>
+    <div class="field"><label>Company name</label>
+      <input id="forgotCompany" placeholder="e.g. Apex Heating &amp; Air"></div>
+    <button class="btn" onclick="submitForgotPassword()">Send reset email</button>
+    <button class="btn ghost" style="margin-top:10px" onclick="cancelForgotPassword()">Back to sign in</button>
+  </div>
+</div>
+
+<!-- ============ RESET EMAIL PREVIEW (no real email service yet) ============ -->
+<div id="resetPreview" style="display:none;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(120% 90% at 50% 0,#163039 0%,var(--bg) 60%);">
+  <div class="login-card" style="max-width:480px">
+    <div class="brand">
+      <div class="mark">NM</div>
+      <div><h1>Reset email ready</h1><span>Preview — no real email service connected yet</span></div>
+    </div>
+    <p class="lede">A new temporary password was generated. Since this prototype doesn't send real email yet, here's the message — copy it and send it yourself for now.</p>
+    <div class="field"><label>To</label><input id="rpTo" readonly></div>
+    <div class="field"><label>Subject</label><input id="rpSubject" readonly></div>
+    <div class="field"><label>Body</label><textarea id="rpBody" rows="8" readonly style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap"></textarea></div>
+    <button class="btn ghost" onclick="copyResetEmail()">Copy email text</button>
+    <button class="btn" style="margin-top:10px" onclick="closeResetPreview()">Back to sign in</button>
+  </div>
+</div>
+
+<!-- ============ FORCE PASSWORD CHANGE (first login only) ============ -->
+<div id="changePass" style="display:none;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(120% 90% at 50% 0,#163039 0%,var(--bg) 60%);">
+  <div class="login-card">
+    <div class="brand">
+      <div class="mark">NM</div>
+      <div><h1>Set your password</h1><span id="cpCompany">—</span></div>
+    </div>
+    <p class="lede">You're signing in with a temporary password. Choose your own password to finish setting up your account — you'll use this one from now on.</p>
+    <div class="field"><label>New password</label>
+      <input id="cpNew" type="password" placeholder="At least 6 characters"></div>
+    <div class="field"><label>Confirm new password</label>
+      <input id="cpConfirm" type="password" placeholder="Re-type your new password"></div>
+    <button class="btn" onclick="submitNewPassword()">Set password &amp; continue</button>
+    <p class="login-hint">This replaces the temporary password from your welcome email. Keep your new one somewhere safe.</p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <div class="topbar">
+    <div class="mark">NM</div>
+    <div class="who"><b>Northern Mississippi AI</b><small id="whoSub">—</small></div>
+    <select id="custLens" onchange="openCustomerPanel(this.value)" style="display:none;max-width:200px;font-family:var(--body);font-size:12.5px;font-weight:600;color:var(--ink);border:1px solid var(--line-dark);background:#fff;border-radius:9px;padding:7px 10px;margin-left:8px">
+      <option value="">— Open a customer —</option>
+    </select>
+    <div class="right">
+      <span id="roleTag" class="role-tag">CLIENT</span>
+      <button class="link-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="conn-strip">
+    <span id="connDot" class="conn-dot"></span>
+    <span id="connText">No server connected — data is held in this page until you connect one</span>
+  </div>
+
+  <div class="wrap">
+    <div class="tabs">
+      <button id="tabParts" class="on" onclick="showTab('parts')">Parts <span class="count" id="cntParts">0</span></button>
+      <button id="tabContacts" onclick="showTab('contacts')">Phone Numbers <span class="count" id="cntContacts">0</span></button>
+      <button id="tabAccount" onclick="showTab('account')" style="display:none">My Account</button>
+      <button id="tabCustomers" onclick="showTab('customers')" style="display:none">Customers <span class="count" id="cntCustomers">0</span></button>
+      <button id="tabAdmin" onclick="showTab('admin')" style="display:none">Server &amp; API</button>
+    </div>
+
+    <div id="paneParts"></div>
+    <div id="paneContacts" style="display:none"></div>
+    <div id="paneAccount" style="display:none"></div>
+    <div id="paneCustomers" style="display:none"></div>
+    <div id="paneAdmin" style="display:none"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ================= STATE ================= */
+const S = {
+  role:'client',
+  company:'',
+  trade:'hvac',     // which trade the signed-in client belongs to — drives categories + CSV templates
+  tab:'parts',
+  conn:{ url:'', key:'', connected:false },
+  parts:[],     // {name, num, code, price, notes}
+  contacts:[],  // {name, phone, email, role}
+  azFilter:{ contacts:null },
+  customers:[], // admin-only master list: {company, trade, email, phone, username, tempPass, apiKey, created}
+  newCust:{ trade:'', company:'', email:'', phone:'' },
+  lastWelcome:null, // most recently generated welcome email, shown for copy/send
+  lastResetEmail:null, // most recent admin-triggered password reset email, shown for copy/send
+  openPanels:[] // admin-only: [{company, trade, parts, contacts}] — one entry per open customer panel, each independent
+};
+
+const TRADES = {
+  hvac:{ label:'HVAC', short:'HVAC', cats:[['CAP','Capacitors'],['MOT','Motors'],['CON','Contactors'],['FLT','Filters'],['TST','Thermostats'],['MIS','Miscellaneous']],
+    roles:[['Office','Front office / dispatch contacts'],['Parts Desk','Parts counter / warehouse / supplier'],['Tech','Field technicians'],['Customer','Job site / customer contacts']] },
+  electrical:{ label:'Electrical', short:'Electrical', cats:[['BRK','Breakers'],['WIR','Wiring & Cable'],['OUT','Outlets & Switches'],['PAN','Panels'],['MOT','Motors & Drives'],['LGT','Lighting'],['MIS','Miscellaneous']],
+    roles:[['Office','Front office / dispatch contacts'],['Supply House','Electrical supplier / warehouse / counter'],['Electrician','Field electricians'],['Customer','Job site / customer contacts']] },
+  plumbing:{ label:'Plumbing', short:'Plumbing', cats:[['PIP','Pipe & Fittings'],['VLV','Valves'],['FIX','Fixtures'],['WTR','Water Heaters'],['DRN','Drains & Vents'],['MIS','Miscellaneous']],
+    roles:[['Office','Front office / dispatch contacts'],['Supply House','Plumbing supplier / warehouse / counter'],['Plumber','Field plumbers'],['Customer','Job site / customer contacts']] }
+};
+
+function CATS_FOR(trade){ return (TRADES[trade]||TRADES.hvac).cats; }
+function ROLES_FOR(trade){ return (TRADES[trade]||TRADES.hvac).roles.map(r=>r[0]); }
+
+/* sample seed so the screens aren't empty while testing */
+function seed(){
+  const examples={
+    hvac:{parts:[
+        {name:'45/5 MFD Dual Run Capacitor',num:'CAP-455',code:'CAP',price:'18.50',notes:''},
+        {name:'1/3 HP Condenser Fan Motor',num:'MTR-13C',code:'MOT',price:'96.00',notes:''},
+        {name:'40A 2-Pole Contactor',num:'CON-402',code:'CON',price:'24.75',notes:''}],
+      contacts:[
+        {name:'Apex Dispatch Office',phone:'555-123-4567',email:'dispatch@apexair.com',role:'Office'},
+        {name:'Main Parts Desk',phone:'555-123-4580',email:'parts@apexair.com',role:'Parts Desk'},
+        {name:'Carla Jennings',phone:'555-200-1199',email:'carla@apexair.com',role:'Tech'},
+        {name:'Smith Residence',phone:'555-987-6543',email:'',role:'Customer'}]},
+    electrical:{parts:[
+        {name:'2-Pole 20A Breaker',num:'BRK-2P20',code:'BRK',price:'18.50',notes:''},
+        {name:'12 AWG THHN Wire (ft)',num:'WIR-12-2',code:'WIR',price:'0.62',notes:''},
+        {name:'4" Square Junction Box',num:'BOX-4SQ',code:'BOX',price:'3.75',notes:''}],
+      contacts:[
+        {name:'Bright Spark Dispatch',phone:'555-123-4567',email:'dispatch@brightspark.com',role:'Office'},
+        {name:'City Electric Supply',phone:'555-123-4580',email:'orders@cityelectricsupply.com',role:'Parts Desk'},
+        {name:'Greg Tanner',phone:'555-200-1199',email:'greg@brightspark.com',role:'Tech'},
+        {name:'Smith Residence',phone:'555-987-6543',email:'',role:'Customer'}]},
+    plumbing:{parts:[
+        {name:'1/2" Copper Pipe (ft)',num:'PIP-12C',code:'PIP',price:'2.10',notes:''},
+        {name:'Ball Valve 3/4"',num:'VLV-34B',code:'VLV',price:'9.80',notes:''},
+        {name:'Wax Toilet Ring',num:'FIX-WAX',code:'FIX',price:'3.25',notes:''}],
+      contacts:[
+        {name:'Southern Pipe Dispatch',phone:'555-123-4567',email:'dispatch@southernpipe.com',role:'Office'},
+        {name:'Ferguson Supply',phone:'555-123-4580',email:'orders@fergusonsupply.com',role:'Parts Desk'},
+        {name:'Mike Doyle',phone:'555-200-1199',email:'mike@southernpipe.com',role:'Tech'},
+        {name:'Smith Residence',phone:'555-987-6543',email:'',role:'Customer'}]}
+  };
+  const ex=examples[S.trade]||examples.hvac;
+  S.parts=ex.parts.slice();
+  S.contacts=ex.contacts.slice();
+}
+
+/* ================= HELPERS ================= */
+const $=id=>document.getElementById(id);
+/* Exactly one of these is ever visible at a time. Every transition routes through here so two screens can never be stacked. */
+const SCREENS=['login','forgotPass','resetPreview','changePass','app'];
+function showScreen(name){
+  SCREENS.forEach(s=>{ const el=$(s); if(el) el.style.display = (s===name) ? 'flex' : 'none'; });
+}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>e.classList.remove('show'),1800);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function genApiKey(){ return 'sk_'+Array.from({length:24},()=>'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random()*36)]).join(''); }
+function genTempPass(){ return Array.from({length:10},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789abcdefghjkmnpqrstuvwxyz'[Math.floor(Math.random()*56)]).join(''); }
+function genUsername(company){ return (company||'customer').toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,20)||'customer'; }
+
+/* ---- per-customer parts & contacts storage (keyed by company name) ---- */
+function custKey(company){ return 'nmai_data_'+String(company||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+function savePartsContacts(company, parts, contacts){
+  if(!company) return;
+  const p = parts!==undefined ? parts : S.parts;
+  const c = contacts!==undefined ? contacts : S.contacts;
+  try{ localStorage.setItem(custKey(company), JSON.stringify({parts:p, contacts:c})); }catch(e){}
+}
+function loadPartsContacts(company){
+  try{
+    const raw=localStorage.getItem(custKey(company));
+    if(raw){ const d=JSON.parse(raw); S.parts=Array.isArray(d.parts)?d.parts:[]; S.contacts=Array.isArray(d.contacts)?d.contacts:[]; return true; }
+  }catch(e){}
+  return false;
+}
+function persistCurrent(){
+  // Only meaningful for a client viewing/editing their own data. Admin panels persist via savePanelData/closeCustomerPanel.
+  if(S.role==='client' && S.company) savePartsContacts(S.company);
+}
+
+/* ================= LOGIN ================= */
+function pickRole(r){
+  S.role=r;
+  $('rClient').classList.toggle('on',r==='client');
+  $('rAdmin').classList.toggle('on',r==='admin');
+  $('userLabel').textContent = r==='admin' ? 'Administrator name' : 'Company name';
+  $('loginUser').placeholder = r==='admin' ? 'Northern Mississippi AI admin' : 'e.g. Bright Spark Electric';
+  $('loginHint').textContent = r==='admin'
+    ? 'Administrators create customer accounts, assign trades, and set the server connection.'
+    : 'Clients can view and correct their parts and contacts, add single entries, or upload a spreadsheet.';
+  $('forgotRow').style.display = r==='admin' ? 'none' : 'block';
+}
+function doLogin(){
+  const u=$('loginUser').value.trim();
+  const pass=$('loginPass').value;
+  if(!u){ toast('Enter a name to sign in'); return; }
+
+  if(S.role==='client'){
+    const match=S.customers.find(c=>c.company.toLowerCase()===u.toLowerCase());
+    if(!match){
+      // No real account — fall through to an unsaved HVAC demo so the prototype stays explorable.
+      S.company=u; S.trade='hvac'; seed();
+      toast('No account found for that name — showing an HVAC demo. Ask your admin to create your account.');
+      enterApp(u);
+      return;
+    }
+    if(!pass){ toast('Enter your password'); return; }
+    if(pass!==match.password){ toast('Incorrect password'); return; }
+    S.company=match.company; S.trade=match.trade;
+    if(!loadPartsContacts(match.company)){ seed(); savePartsContacts(match.company); }
+    if(match.mustChangePassword){
+      showChangePassword(match);
+      return;
+    }
+    enterApp(u);
+  } else {
+    S.company=u;
+    S.openPanels=[];
+    enterApp(u);
+  }
+}
+function showChangePassword(match){
+  showScreen('changePass');
+  $('cpCompany').textContent=match.company;
+  $('cpNew').value=''; $('cpConfirm').value='';
+}
+function submitNewPassword(){
+  const match=S.customers.find(c=>c.company===S.company);
+  if(!match){ toast('Something went wrong — please sign in again'); showScreen('login'); return; }
+  const p1=$('cpNew').value, p2=$('cpConfirm').value;
+  if(p1.length<6){ toast('Password must be at least 6 characters'); return; }
+  if(p1!==p2){ toast('Passwords don\u2019t match'); return; }
+  match.password=p1;
+  match.mustChangePassword=false;
+  saveCustomers();
+  toast('Password set');
+  enterApp(S.company);
+}
+
+/* ---- PASSWORD RESET (client self-service "Forgot password?", and admin-triggered) ---- */
+function buildResetEmail(match){
+  const tradeLabel=TRADES[match.trade]?TRADES[match.trade].label:match.trade;
+  return {
+    to: match.email,
+    subject: `Password reset — ${tradeLabel} Calculator account`,
+    body: `Hi ${match.company},
+
+A password reset was requested for your ${tradeLabel} Calculator account.
+
+  Username: ${match.username}
+  New temporary password: ${match.tempPass}
+
+Sign in with this temporary password — you'll be asked to set your own right away.
+
+Your API key hasn't changed, so your phone app stays connected with no extra steps.
+
+If you didn't request this, contact us right away.
+
+— Northern Mississippi AI`
+  };
+}
+function resetCustomerPassword(match){
+  match.tempPass=genTempPass();
+  match.password=match.tempPass;
+  match.mustChangePassword=true;
+  saveCustomers();
+  return buildResetEmail(match);
+}
+function showForgotPassword(){
+  showScreen('forgotPass');
+  $('forgotCompany').value=$('loginUser').value||'';
+}
+function cancelForgotPassword(){
+  showScreen('login');
+}
+function submitForgotPassword(){
+  const u=$('forgotCompany').value.trim();
+  if(!u){ toast('Enter your company name'); return; }
+  const match=S.customers.find(c=>c.company.toLowerCase()===u.toLowerCase());
+  if(!match){ toast('No account found with that company name'); return; }
+  const email=resetCustomerPassword(match);
+  openResetPreview(email);
+}
+function openResetPreview(email){
+  $('rpTo').value=email.to;
+  $('rpSubject').value=email.subject;
+  $('rpBody').value=email.body;
+  showScreen('resetPreview');
+}
+function closeResetPreview(){
+  showScreen('login');
+}
+function copyResetEmail(){
+  const ta=$('rpBody'); if(!ta) return;
+  navigator.clipboard?.writeText(ta.value).then(()=>toast('Email text copied')).catch(()=>{ ta.select(); toast('Select all to copy'); });
+}
+/* Admin-triggered reset from the Customers tab — same effect as the client's own forgot-password flow */
+function adminResetPassword(company){
+  const match=S.customers.find(c=>c.company===company);
+  if(!match){ toast('Customer not found'); return; }
+  if(!confirm(`Reset the password for ${company}? They'll need to use a new temporary password and set their own on next sign-in.`)) return;
+  S.lastWelcome=null; // clear any old welcome-email preview so the reset one is unambiguous
+  S.lastResetEmail=resetCustomerPassword(match);
+  render(); showTab('customers');
+  toast('Password reset for '+company+' — email preview ready below');
+}
+function enterApp(u){
+  showScreen('app');
+  $('whoSub').textContent = (S.role==='admin'?'Administrator · ':'') + u;
+  $('roleTag').textContent = S.role==='admin'?'ADMIN':'CLIENT';
+  $('roleTag').className = 'role-tag'+(S.role==='admin'?' admin':'');
+  $('tabAdmin').style.display = S.role==='admin'?'flex':'none';
+  $('tabCustomers').style.display = S.role==='admin'?'flex':'none';
+  $('tabAccount').style.display = S.role==='client'?'flex':'none';
+  $('custLens').style.display = S.role==='admin'?'inline-block':'none';
+  if(S.role==='admin') refreshCustLensOptions();
+  updateConn();
+  render();
+}
+function logout(){
+  persistCurrent(); // save the client's own data (no-op for admin)
+  S.openPanels.forEach(savePanelData); // save every open admin panel before closing the session
+  S.openPanels=[];
+  showScreen('login');
+  $('loginUser').value=''; $('loginPass').value='';
+}
+
+/* ================= CONNECTION ================= */
+function updateConn(){
+  S.conn.connected = !!(S.conn.url.trim());
+  $('connDot').className = 'conn-dot'+(S.conn.connected?' live':'');
+  $('connText').textContent = S.conn.connected
+    ? 'Connected · '+S.conn.url
+    : 'No server connected — data is held in this page until you connect one';
+}
+
+/* ================= TABS ================= */
+function showTab(t){
+  S.tab=t;
+  $('tabParts').classList.toggle('on',t==='parts');
+  $('tabContacts').classList.toggle('on',t==='contacts');
+  $('tabAccount').classList.toggle('on',t==='account');
+  $('tabCustomers').classList.toggle('on',t==='customers');
+  $('tabAdmin').classList.toggle('on',t==='admin');
+  $('paneParts').style.display = t==='parts'?'block':'none';
+  $('paneContacts').style.display = t==='contacts'?'block':'none';
+  $('paneAccount').style.display = t==='account'?'block':'none';
+  $('paneCustomers').style.display = t==='customers'?'block':'none';
+  $('paneAdmin').style.display = t==='admin'?'block':'none';
+  if(t==='account') renderAccount();
+}
+
+/* ================= RENDER ================= */
+function render(){
+  $('cntParts').textContent = S.parts.length;
+  $('cntContacts').textContent = S.contacts.length;
+  renderParts();
+  renderContacts();
+  if(S.role==='admin'){ $('cntCustomers').textContent = S.customers.length; renderCustomers(); renderAdmin(); }
+}
+
+/* ---- PARTS ---- */
+function renderParts(){
+  if(S.role==='admin'){
+    if(!S.openPanels.length){
+      $('paneParts').innerHTML = `<div class="card"><div class="card-body"><div class="empty" style="padding:40px 20px">Open a customer from the dropdown in the top-left to view or edit their parts list. You can open more than one at a time.</div></div></div>`;
+      return;
+    }
+    $('paneParts').innerHTML = S.openPanels.map(p=>partsCardHTML(p.company, p.parts, p.trade, true)).join('');
+    S.openPanels.forEach(p=>wireDrop('dropParts__'+panelId(p.company)));
+    return;
+  }
+  $('paneParts').innerHTML = partsCardHTML(null, S.parts, S.trade, false);
+  wireDrop('dropParts');
+}
+function panelId(company){ return String(company).replace(/[^a-zA-Z0-9]+/g,'_'); }
+function partsCardHTML(owner, parts, trade, isPanel){
+  const pid = isPanel ? panelId(owner) : '';
+  const sfx = isPanel ? '__'+pid : ''; // suffix to keep element IDs unique per open panel
+  const delFn = isPanel ? `delPanelPart('${esc(owner)}',` : `delPart(`;
+  const addFn = isPanel ? `addPanelPart('${esc(owner)}')` : `addPart()`;
+  const tplFn = isPanel ? `downloadPartsTemplate('${esc(owner)}','${trade}')` : `downloadPartsTemplate()`;
+  const csvFn = isPanel ? `handleCSV(this,'parts','${esc(owner)}')` : `handleCSV(this,'parts')`;
+  const pushFn = isPanel ? `pushData('parts','${esc(owner)}')` : `pushData('parts')`;
+
+  const rows = parts.length ? parts.map((p,i)=>`
+    <tr>
+      <td>${esc(p.name)}</td>
+      <td class="mono">${esc(p.num)}</td>
+      <td><span class="cat-tag">${esc(p.code)}</span></td>
+      <td class="mono">$${esc(p.price)}</td>
+      <td>${esc(p.notes)}</td>
+      <td><button class="row-del" onclick="${delFn}${i})" title="Delete">×</button></td>
+    </tr>`).join('')
+    : `<tr><td colspan="6"><div class="empty">No parts yet. Add one below or upload a spreadsheet.</div></td></tr>`;
+
+  return `
+  <div class="card">
+    <div class="card-head">
+      <div><div class="eyebrow">${isPanel?esc(owner)+' · ':''}${TRADES[trade]?TRADES[trade].label+' · ':''}Parts list</div><h2>${parts.length} part${parts.length===1?'':'s'} on file</h2>
+      <p>Same columns as the parts spreadsheet. Add single parts here, or upload the whole list.</p></div>
+      ${isPanel?`<div class="right"><button class="row-del" style="width:30px;height:30px;font-size:20px" onclick="closeCustomerPanel('${esc(owner)}')" title="Close ${esc(owner)}">×</button></div>`:''}
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Part Name</th><th>Part #</th><th>Category</th><th>Price</th><th>Notes</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="card-body" style="border-top:1px solid var(--line)">
+      <div class="eyebrow" style="margin-bottom:10px">Add a single part</div>
+      <div class="four">
+        <div class="field" style="margin:0"><label>Part name</label><input id="pName${sfx}" placeholder="e.g. 50/5 MFD Capacitor"></div>
+        <div class="field" style="margin:0"><label>Part number</label><input id="pNum${sfx}" placeholder="CAP-505"></div>
+        <div class="field" style="margin:0"><label>Category</label>
+          <select id="pCode${sfx}">${CATS_FOR(trade).map(c=>`<option value="${c[0]}">${c[1]} (${c[0]})</option>`).join('')}</select></div>
+        <div class="field" style="margin:0"><label>Price ($)</label><input id="pPrice${sfx}" type="number" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="field" style="margin-top:10px"><label>Notes (optional)</label><input id="pNotes${sfx}" placeholder="e.g. fits Goodman 2-3 ton"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn small" onclick="${addFn}">Add part</button>
+        <button class="btn small ghost" onclick="voiceInputPart('${sfx}')" title="Click, then speak: part name, part number, category, price">🎤 Speak part</button>
+      </div>
+
+      <div style="margin-top:18px"><div class="eyebrow" style="margin-bottom:10px">${isPanel?esc(owner)+'\u2019s':'Your'} ${esc(TRADES[trade]?TRADES[trade].label:'')} parts template</div>
+        <button class="btn ghost small" onclick="${tplFn}">⬇ Download parts template (.csv)</button>
+        <p style="font-size:11.5px;color:var(--ink-soft);margin-top:8px">Fill this in with their parts, then upload it below.</p>
+      </div>
+
+      <div style="margin-top:18px"><div class="eyebrow" style="margin-bottom:10px">Or upload the parts spreadsheet (CSV)</div>
+        <label class="drop" id="dropParts${sfx}">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"/></svg>
+          <b>Drop your parts CSV here</b><span>or click to choose a file</span>
+          <input type="file" accept=".csv" onchange="${csvFn}">
+        </label>
+      </div>
+
+      <div class="pushbar">
+        <span class="status">${S.conn.connected?'Ready to push to '+esc(S.conn.url):'No server connected — connect one to push live'}</span>
+        <button class="btn small ${S.conn.connected?'':'ghost'}" onclick="${pushFn}">Push parts to cloud</button>
+      </div>
+      <div class="note">Single entries and uploads appear in the table above immediately. "Push to cloud" sends the current list to your connected server. Until a server is connected, everything stays in this page so you can review it.</div>
+    </div>
+  </div>`;
+}
+function addPart(){
+  const name=$('pName').value.trim();
+  if(!name){toast('Enter a part name');return;}
+  S.parts.push({name, num:$('pNum').value.trim().toUpperCase(), code:$('pCode').value, price:($('pPrice').value||'0.00'), notes:$('pNotes').value.trim()});
+  persistCurrent(); render(); showTab('parts'); toast('Part added');
+}
+function delPart(i){ S.parts.splice(i,1); persistCurrent(); render(); toast('Part removed'); }
+function addPanelPart(company){
+  const panel=panelFor(company); if(!panel) return;
+  const sfx='__'+panelId(company);
+  const name=($('pName'+sfx).value||'').trim();
+  if(!name){toast('Enter a part name');return;}
+  panel.parts.push({name, num:($('pNum'+sfx).value||'').trim().toUpperCase(), code:$('pCode'+sfx).value, price:($('pPrice'+sfx).value||'0.00'), notes:($('pNotes'+sfx).value||'').trim()});
+  savePanelData(panel); render(); toast('Part added for '+company);
+}
+function delPanelPart(company,i){
+  const panel=panelFor(company); if(!panel) return;
+  panel.parts.splice(i,1); savePanelData(panel); render(); toast('Part removed');
+}
+
+/* ---- CONTACTS (alphabetical + A-Z rail) ---- */
+function renderContacts(){
+  if(S.role==='admin'){
+    if(!S.openPanels.length){
+      $('paneContacts').innerHTML = `<div class="card"><div class="card-body"><div class="empty" style="padding:40px 20px">Open a customer from the dropdown in the top-left to view or edit their phone numbers. You can open more than one at a time.</div></div></div>`;
+      return;
+    }
+    $('paneContacts').innerHTML = S.openPanels.map(p=>contactsCardHTML(p.company, p.contacts, p.trade, true, p.azFilter)).join('');
+    S.openPanels.forEach(p=>wireDrop('dropContacts__'+panelId(p.company)));
+    return;
+  }
+  $('paneContacts').innerHTML = contactsCardHTML(null, S.contacts, S.trade, false, S.azFilter.contacts);
+  wireDrop('dropContacts');
+}
+function contactsCardHTML(owner, contacts, trade, isPanel, filter){
+  const pid = isPanel ? panelId(owner) : '';
+  const sfx = isPanel ? '__'+pid : '';
+  const delFn = isPanel ? `delPanelContact('${esc(owner)}',` : `delContact(`;
+  const addFn = isPanel ? `addPanelContact('${esc(owner)}')` : `addContact()`;
+  const tplFn = isPanel ? `downloadContactsTemplate('${esc(owner)}')` : `downloadContactsTemplate()`;
+  const csvFn = isPanel ? `handleCSV(this,'contacts','${esc(owner)}')` : `handleCSV(this,'contacts')`;
+  const pushFn = isPanel ? `pushData('contacts','${esc(owner)}')` : `pushData('contacts')`;
+  const azFn = isPanel ? (L=>`azJumpPanel('${esc(owner)}',${L===null?'null':"'"+L+"'"})`) : (L=>`azJump(${L===null?'null':"'"+L+"'"})`);
+
+  // sort a copy alphabetically by name, remember original index for delete
+  const indexed = contacts.map((c,i)=>({...c,_i:i}));
+  indexed.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  const present = new Set(indexed.map(c=>(c.name[0]||'#').toUpperCase()));
+  const shown = filter ? indexed.filter(c=>(c.name[0]||'#').toUpperCase()===filter) : indexed;
+
+  const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const azBar = `<div class="az">
+    <button onclick="${azFn(null)}" style="width:auto;padding:0 8px;${!filter?'background:#E6EEF0;color:var(--primary)':''}">All</button>
+    ${alphabet.map(L=>`<button class="${present.has(L)?'':'empty-letter'}" onclick="${present.has(L)?azFn(L):''}" style="${filter===L?'background:var(--primary);color:#fff':''}">${L}</button>`).join('')}
+  </div>`;
+
+  let body;
+  if(!shown.length){
+    body=`<tr><td colspan="5"><div class="empty">No contacts ${filter?'under "'+filter+'"':'yet'}. Add one below or upload a spreadsheet.</div></td></tr>`;
+  } else {
+    let lastLetter=null; const out=[];
+    shown.forEach(c=>{
+      const L=(c.name[0]||'#').toUpperCase();
+      if(!filter && L!==lastLetter){ out.push(`<tr><td colspan="5" style="padding:0"><div class="alpha-head">${L}</div></td></tr>`); lastLetter=L; }
+      out.push(`<tr>
+        <td><b>${esc(c.name)}</b></td>
+        <td class="mono">${esc(c.phone)}</td>
+        <td>${esc(c.email)}</td>
+        <td><span class="role-pill">${esc(c.role)}</span></td>
+        <td><button class="row-del" onclick="${delFn}${c._i})" title="Delete">×</button></td>
+      </tr>`);
+    });
+    body=out.join('');
+  }
+
+  return `
+  <div class="card">
+    <div class="card-head">
+      <div><div class="eyebrow">${isPanel?esc(owner)+' · ':''}Phone numbers</div><h2>${contacts.length} contact${contacts.length===1?'':'s'} on file</h2>
+      <p>Sorted A–Z by name. Tap a letter to jump. Same columns as the contacts spreadsheet.</p></div>
+      ${isPanel?`<div class="right"><button class="row-del" style="width:30px;height:30px;font-size:20px" onclick="closeCustomerPanel('${esc(owner)}')" title="Close ${esc(owner)}">×</button></div>`:''}
+    </div>
+    ${azBar}
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Role</th><th></th></tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+    <div class="card-body" style="border-top:1px solid var(--line)">
+      <div class="eyebrow" style="margin-bottom:10px">Add a single contact</div>
+      <div class="four">
+        <div class="field" style="margin:0"><label>Name</label><input id="cName${sfx}" placeholder="e.g. Riverside Office"></div>
+        <div class="field" style="margin:0"><label>Phone number</label><input id="cPhone${sfx}" placeholder="555-123-4567"></div>
+        <div class="field" style="margin:0"><label>Email</label><input id="cEmail${sfx}" placeholder="name@email.com"></div>
+        <div class="field" style="margin:0"><label>Role</label>
+          <select id="cRole${sfx}">${ROLES_FOR(trade).map(r=>`<option>${r}</option>`).join('')}</select></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn small" onclick="${addFn}">Add contact</button>
+        <button class="btn small ghost" onclick="voiceInputContact('${sfx}')" title="Click, then speak: name, phone, email, role">🎤 Speak contact</button>
+      </div>
+
+      <div style="margin-top:18px"><div class="eyebrow" style="margin-bottom:10px">${isPanel?esc(owner)+'\u2019s':'Your'} contacts template</div>
+        <button class="btn ghost small" onclick="${tplFn}">⬇ Download contacts template (.csv)</button>
+        <p style="font-size:11.5px;color:var(--ink-soft);margin-top:8px">Fill this in with their numbers, then upload it below.</p>
+      </div>
+
+      <div style="margin-top:18px"><div class="eyebrow" style="margin-bottom:10px">Or upload the contacts spreadsheet (CSV)</div>
+        <label class="drop" id="dropContacts${sfx}">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3"/></svg>
+          <b>Drop your contacts CSV here</b><span>or click to choose a file</span>
+          <input type="file" accept=".csv" onchange="${csvFn}">
+        </label>
+      </div>
+
+      <div class="pushbar">
+        <span class="status">${S.conn.connected?'Ready to push to '+esc(S.conn.url):'No server connected — connect one to push live'}</span>
+        <button class="btn small ${S.conn.connected?'':'ghost'}" onclick="${pushFn}">Push contacts to cloud</button>
+      </div>
+    </div>
+  </div>`;
+}
+function azJump(L){ S.azFilter.contacts=L; renderContacts(); }
+function azJumpPanel(company,L){ const panel=panelFor(company); if(!panel) return; panel.azFilter=L; renderContacts(); }
+function addContact(){
+  const name=$('cName').value.trim();
+  if(!name){toast('Enter a name');return;}
+  S.contacts.push({name, phone:$('cPhone').value.trim(), email:$('cEmail').value.trim(), role:$('cRole').value});
+  persistCurrent(); render(); showTab('contacts'); toast('Contact added');
+}
+function delContact(i){ S.contacts.splice(i,1); persistCurrent(); render(); toast('Contact removed'); }
+function addPanelContact(company){
+  const panel=panelFor(company); if(!panel) return;
+  const sfx='__'+panelId(company);
+  const name=($('cName'+sfx).value||'').trim();
+  if(!name){toast('Enter a name');return;}
+  panel.contacts.push({name, phone:($('cPhone'+sfx).value||'').trim(), email:($('cEmail'+sfx).value||'').trim(), role:$('cRole'+sfx).value});
+  savePanelData(panel); render(); toast('Contact added for '+company);
+}
+function delPanelContact(company,i){
+  const panel=panelFor(company); if(!panel) return;
+  panel.contacts.splice(i,1); savePanelData(panel); render(); toast('Contact removed');
+}
+
+/* ---- ADMIN: customers (create accounts, assign trade, generate credentials) ---- */
+function renderCustomers(){
+  const rows = S.customers.length ? S.customers.map((c,i)=>`
+    <tr>
+      <td><b>${esc(c.company)}</b></td>
+      <td><span class="cat-tag">${esc(TRADES[c.trade]?TRADES[c.trade].label:c.trade)}</span></td>
+      <td>${esc(c.email)}</td>
+      <td class="mono">${esc(c.username)}</td>
+      <td class="mono">${esc(c.apiKey)}</td>
+      <td><span class="role-pill" style="${c.mustChangePassword?'background:#FBF1DA;color:var(--warn)':'background:var(--good-soft,#E6F5EE);color:var(--good)'}">${c.mustChangePassword?'Temp password':'Password set'}</span></td>
+      <td style="white-space:nowrap">
+        <button class="link-btn" style="color:var(--primary);font-size:12px;font-weight:600" onclick="adminResetPassword('${esc(c.company)}')">Reset password</button>
+        <button class="row-del" onclick="delCustomer(${i})" title="Remove">×</button>
+      </td>
+    </tr>`).join('')
+    : `<tr><td colspan="7"><div class="empty">No customer accounts yet. Create one below.</div></td></tr>`;
+
+  $('paneCustomers').innerHTML = `
+  <div class="card admin-only">
+    <div class="card-head">
+      <div><div class="eyebrow" style="color:var(--warn)">Administrator only</div><h2>Create a customer account</h2>
+      <p>Pick a trade, enter their business info, and an account, password, and API key are generated automatically.</p></div>
+    </div>
+    <div class="card-body">
+      <div class="field"><label>Trade</label>
+        <select id="ncTrade" onchange="state_ncTrade(this.value)">
+          <option value="">— Select a trade —</option>
+          ${Object.keys(TRADES).map(k=>`<option value="${k}" ${S.newCust.trade===k?'selected':''}>${TRADES[k].label} Calculator</option>`).join('')}
+        </select></div>
+      ${S.newCust.trade?`
+      <div class="two">
+        <div class="field"><label>Company name</label><input id="ncCompany" placeholder="e.g. ${S.newCust.trade==='hvac'?'Apex Heating & Air':S.newCust.trade==='electrical'?'Bright Spark Electric':'Southern Pipe Plumbing'}" value="${esc(S.newCust.company)}" oninput="S.newCust.company=this.value"></div>
+        <div class="field"><label>Contact email</label><input id="ncEmail" type="email" placeholder="owner@company.com" value="${esc(S.newCust.email)}" oninput="S.newCust.email=this.value"></div>
+      </div>
+      <div class="field"><label>Contact phone</label><input id="ncPhone" placeholder="555-123-4567" value="${esc(S.newCust.phone)}" oninput="S.newCust.phone=this.value"></div>
+      <button class="btn" onclick="createCustomer()">Create account &amp; send welcome email</button>
+      `:`<p class="note">Select a trade above to continue.</p>`}
+    </div>
+  </div>
+
+  ${S.lastWelcome?`
+  <div class="card">
+    <div class="card-head">
+      <div><div class="eyebrow">Just created</div><h2>Welcome email for ${esc(S.lastWelcome.company)}</h2>
+      <p>This is a preview — copy it into your email client, or connect a real email service later to send it automatically.</p></div>
+      <div class="right"><button class="btn small ghost" onclick="copyWelcome()">Copy email text</button></div>
+    </div>
+    <div class="card-body">
+      <div class="field"><label>To</label><input value="${esc(S.lastWelcome.email)}" readonly></div>
+      <div class="field"><label>Subject</label><input value="${esc(S.lastWelcome.subject)}" readonly></div>
+      <div class="field"><label>Body</label><textarea id="welcomeBody" rows="10" readonly style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap">${esc(S.lastWelcome.body)}</textarea></div>
+    </div>
+  </div>`:''}
+
+  ${S.lastResetEmail?`
+  <div class="card admin-only">
+    <div class="card-head">
+      <div><div class="eyebrow" style="color:var(--warn)">Password reset</div><h2>Reset email for ${esc(S.lastResetEmail.to)}</h2>
+      <p>This is a preview — copy it into your email client and send it to the customer.</p></div>
+      <div class="right"><button class="btn small ghost" onclick="copyAdminResetEmail()">Copy email text</button></div>
+    </div>
+    <div class="card-body">
+      <div class="field"><label>To</label><input value="${esc(S.lastResetEmail.to)}" readonly></div>
+      <div class="field"><label>Subject</label><input value="${esc(S.lastResetEmail.subject)}" readonly></div>
+      <div class="field"><label>Body</label><textarea id="adminResetBody" rows="8" readonly style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap">${esc(S.lastResetEmail.body)}</textarea></div>
+    </div>
+  </div>`:''}
+
+  <div class="card">
+    <div class="card-head">
+      <div><div class="eyebrow">All accounts</div><h2>${S.customers.length} customer${S.customers.length===1?'':'s'} · API keys</h2>
+      <p>Master list across all three trades. Each API key identifies one customer's account when their app syncs.</p></div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Company</th><th>Trade</th><th>Email</th><th>Username</th><th>API key</th><th>Password</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    ${!S.customers.length?`<div class="card-body" style="border-top:1px solid var(--line)"><button class="btn ghost small" onclick="loadExampleCustomers()">Load 3 example accounts (for testing)</button></div>`:''}
+  </div>`;
+}
+function state_ncTrade(v){ S.newCust.trade=v; renderCustomers(); }
+function createCustomer(){
+  const n=S.newCust;
+  if(!n.trade){ toast('Select a trade'); return; }
+  const company=($('ncCompany')?.value||'').trim();
+  const email=($('ncEmail')?.value||'').trim();
+  const phone=($('ncPhone')?.value||'').trim();
+  if(!company){ toast('Enter a company name'); return; }
+  if(!email){ toast('Enter a contact email'); return; }
+  if(S.customers.some(c=>c.company.toLowerCase()===company.toLowerCase())){ toast('A customer with that company name already exists'); return; }
+
+  const username=genUsername(company);
+  const tempPass=genTempPass();
+  const apiKey=genApiKey();
+  const created=new Date().toISOString().slice(0,10);
+  const rec={ company, trade:n.trade, email, phone, username, tempPass, password:tempPass, mustChangePassword:true, apiKey, created };
+  S.customers.push(rec);
+
+  const tradeLabel=TRADES[n.trade].label;
+  S.lastWelcome={
+    company, email,
+    subject:`Your ${tradeLabel} Calculator account is ready`,
+    body:`Hi ${company},
+
+Your ${tradeLabel} Calculator cloud account is set up. Here's everything you need to get started:
+
+  Sign-in page: [your dashboard URL here]
+  Username: ${username}
+  Temporary password: ${tempPass}
+  API key: ${apiKey}
+
+The first time you sign in, you'll be asked to set your own password.
+
+Once you're in, your dashboard has two starter spreadsheets ready to download — a Parts template and a Phone Numbers template, both already set up for ${tradeLabel.toLowerCase()} work. Fill in your own parts and contacts, then upload them right back on the same page (or add entries one at a time).
+
+Your API key is also always available under the "My Account" tab once you're signed in, if you need to find it again.
+
+To finish connecting your phone app, open Settings → Cloud Sync in the app and paste in the API key above.
+
+Questions any time — just reply to this email.
+
+— Northern Mississippi AI`
+  };
+
+  S.newCust={trade:'',company:'',email:'',phone:''};
+  S.lastResetEmail=null;
+  saveCustomers();
+  refreshCustLensOptions();
+  render(); showTab('customers');
+  toast('Account created — welcome email ready below');
+}
+function delCustomer(i){
+  const removed=S.customers[i];
+  S.customers.splice(i,1); saveCustomers();
+  if(removed){ const idx=S.openPanels.findIndex(p=>p.company===removed.company); if(idx>-1) S.openPanels.splice(idx,1); }
+  refreshCustLensOptions();
+  render(); toast('Customer removed');
+}
+
+/* ---- ADMIN: company panels (upper-left dropdown opens one card per company, each closeable) ---- */
+function refreshCustLensOptions(){
+  const sel=$('custLens'); if(!sel) return;
+  sel.innerHTML = `<option value="">— Open a customer —</option>` +
+    S.customers.map(c=>`<option value="${esc(c.company)}">${esc(c.company)} (${TRADES[c.trade]?TRADES[c.trade].short:c.trade})</option>`).join('');
+  sel.value=''; // always reset to neutral so the same dropdown can be used to open another company next
+}
+function openCustomerPanel(company){
+  if(!company) return;
+  const sel=$('custLens'); if(sel) sel.value=''; // reset dropdown to neutral right away
+  if(S.openPanels.some(p=>p.company===company)){ toast(company+' is already open'); return; }
+  const match=S.customers.find(c=>c.company===company);
+  const trade = match ? match.trade : 'hvac';
+  const panel={ company, trade, parts:[], contacts:[], azFilter:null };
+  if(!loadIntoPanel(panel)){
+    // brand-new customer with nothing saved yet — leave empty, ready for first entries/upload
+  }
+  S.openPanels.push(panel);
+  render(); showTab('parts');
+  toast('Opened '+company);
+}
+function closeCustomerPanel(company){
+  const i=S.openPanels.findIndex(p=>p.company===company);
+  if(i<0) return;
+  savePanelData(S.openPanels[i]); // persist on close so nothing's lost
+  S.openPanels.splice(i,1);
+  render();
+  toast('Closed '+company);
+}
+function loadIntoPanel(panel){
+  try{
+    const raw=localStorage.getItem(custKey(panel.company));
+    if(raw){ const d=JSON.parse(raw); panel.parts=Array.isArray(d.parts)?d.parts:[]; panel.contacts=Array.isArray(d.contacts)?d.contacts:[]; return true; }
+  }catch(e){}
+  return false;
+}
+function savePanelData(panel){ savePartsContacts(panel.company, panel.parts, panel.contacts); }
+function panelFor(company){ return S.openPanels.find(p=>p.company===company); }
+function loadExampleCustomers(){
+  const examples=[
+    {trade:'hvac', company:'Apex Heating & Air', email:'office@apexair.com', phone:'555-101-2020'},
+    {trade:'electrical', company:'Bright Spark Electric', email:'greg@brightspark.com', phone:'555-202-3030'},
+    {trade:'plumbing', company:'Southern Pipe Plumbing', email:'office@southernpipe.com', phone:'555-303-4040'}
+  ];
+  examples.forEach(e=>{
+    if(S.customers.some(c=>c.company.toLowerCase()===e.company.toLowerCase())) return;
+    const tempPass=genTempPass();
+    S.customers.push({...e, username:genUsername(e.company), tempPass, password:tempPass, mustChangePassword:true, apiKey:genApiKey(), created:new Date().toISOString().slice(0,10)});
+  });
+  saveCustomers(); refreshCustLensOptions(); render(); showTab('customers');
+  toast('Example accounts loaded');
+}
+function copyWelcome(){
+  const ta=$('welcomeBody'); if(!ta) return;
+  navigator.clipboard?.writeText(ta.value).then(()=>toast('Email text copied')).catch(()=>{ ta.select(); toast('Select all to copy'); });
+}
+function copyAdminResetEmail(){
+  const ta=$('adminResetBody'); if(!ta) return;
+  navigator.clipboard?.writeText(ta.value).then(()=>toast('Email text copied')).catch(()=>{ ta.select(); toast('Select all to copy'); });
+}
+function saveCustomers(){
+  try{ localStorage.setItem('nmai_customers', JSON.stringify(S.customers)); }catch(e){}
+}
+function loadCustomers(){
+  try{ const d=JSON.parse(localStorage.getItem('nmai_customers')||'[]'); if(Array.isArray(d)) S.customers=d; }catch(e){}
+}
+
+/* ---- ADMIN: server + API ---- */
+/* ---- CLIENT: My Account (API key + login info) ---- */
+function renderAccount(){
+  const match=S.customers.find(c=>c.company===S.company);
+  if(!match){
+    $('paneAccount').innerHTML = `<div class="card"><div class="card-body"><div class="empty" style="padding:30px 20px">This is a demo session with no account on file, so there's no API key yet. Ask your admin to create your account to get one.</div></div></div>`;
+    return;
+  }
+  $('paneAccount').innerHTML = `
+  <div class="card">
+    <div class="card-head">
+      <div><div class="eyebrow">Connect your phone app</div><h2>API key</h2>
+      <p>Paste this into your app under Settings → Cloud Sync to connect it to this account.</p></div>
+    </div>
+    <div class="card-body">
+      <div class="field"><label>Your API key</label>
+        <input id="acctApiKey" value="${esc(match.apiKey)}" readonly style="font-family:var(--mono)"></div>
+      <button class="btn ghost small" onclick="copyApiKey()">Copy API key</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div><div class="eyebrow">Account</div><h2>Login info</h2></div></div>
+    <div class="card-body">
+      <div class="field"><label>Company name</label><input value="${esc(match.company)}" readonly></div>
+      <div class="field"><label>Username</label><input value="${esc(match.username)}" readonly></div>
+      <div class="field"><label>Trade</label><input value="${esc(TRADES[match.trade]?TRADES[match.trade].label:match.trade)}" readonly></div>
+      <p class="note">To change your password, sign out and use "Forgot password" on the sign-in screen (coming soon) — or ask your admin to reset it.</p>
+    </div>
+  </div>`;
+}
+function copyApiKey(){
+  const el=$('acctApiKey'); if(!el) return;
+  navigator.clipboard?.writeText(el.value).then(()=>toast('API key copied')).catch(()=>{ el.select(); toast('Select all to copy'); });
+}
+
+function renderAdmin(){
+  $('paneAdmin').innerHTML = `
+  <div class="card admin-only">
+    <div class="card-head">
+      <div><div class="eyebrow" style="color:var(--warn)">Administrator only</div><h2>Server connection &amp; API key</h2>
+      <p>Paste your cloud service details once you've chosen a provider. Clients never see this screen.</p></div>
+    </div>
+    <div class="card-body">
+      <div class="field"><label>Server endpoint URL</label>
+        <input id="connUrl" placeholder="https://your-project.firebaseio.com  or  https://xyz.supabase.co/rest/v1" value="${esc(S.conn.url)}"></div>
+      <div class="field"><label>API key</label>
+        <input id="connKey" placeholder="Paste the secret API key for your service" value="${esc(S.conn.key)}"></div>
+      <div class="two">
+        <button class="btn" onclick="saveConn()">Save connection</button>
+        <button class="btn ghost" onclick="testConn()">Test connection</button>
+      </div>
+      <div class="note">When you choose a provider (Firebase, Supabase, AWS, etc.), paste its URL and key here and press Save. After that, the "Push to cloud" buttons on the Parts and Phone Numbers tabs send live data using this URL and key — no other changes needed. To swap providers later, just paste new values.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div><div class="eyebrow">Reference</div><h2>What gets sent</h2></div></div>
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--ink-soft);line-height:1.6">Each push sends the current list as JSON to your endpoint with the API key in the request header. Parts go to a <b>parts</b> collection; contacts go to a <b>contacts</b> collection — kept separate under the same account. The exact field names match the spreadsheet columns: parts use name, num, code, price, notes; contacts use name, phone, email, role.</p>
+    </div>
+  </div>`;
+}
+function saveConn(){
+  S.conn.url=$('connUrl').value.trim();
+  S.conn.key=$('connKey').value.trim();
+  try{ localStorage.setItem('nmai_conn', JSON.stringify({url:S.conn.url, key:S.conn.key})); }catch(e){}
+  updateConn(); render(); showTab('admin');
+  toast(S.conn.url?'Connection saved':'Connection cleared');
+}
+function loadConn(){
+  try{
+    const raw=localStorage.getItem('nmai_conn');
+    if(raw){ const d=JSON.parse(raw); S.conn.url=d.url||''; S.conn.key=d.key||''; }
+  }catch(e){}
+}
+function testConn(){
+  if(!S.conn.url){ toast('Enter a server URL first'); return; }
+  if(!S.conn.key){ toast('Enter an API key first'); return; }
+  let base = S.conn.url.replace(/\/$/,'');
+  if(/\.supabase\.co$/i.test(base)) base += '/rest/v1';
+  toast('Testing connection…');
+  fetch(base + '/parts?select=*&limit=1', {
+    headers:{ 'Authorization':'Bearer '+S.conn.key, 'apikey':S.conn.key }
+  })
+  .then(async r=>{
+    if(r.status===404) throw new Error('No "parts" table found at that URL — check the table exists in Supabase');
+    if(r.status===401||r.status===403) throw new Error('Key rejected — make sure you used the service role (secret) key, not the publishable/anon key');
+    if(!r.ok){ const t=await r.text().catch(()=>''); throw new Error('HTTP '+r.status+' '+t.slice(0,150)); }
+    toast('✅ Connected — found the parts table and read access works');
+  })
+  .catch(err=> toast('❌ '+(err.message||'Connection test failed')));
+}
+
+/* ---- CSV TEMPLATES (the real, designed templates — embedded verbatim, served as-is per trade) ---- */
+const REAL_TEMPLATES = {
+  electrical_parts: `Part Name,Part Number,Category Code,Price,Notes
+20A Single-Pole Breaker,BRK-201,BRK,9.50,Example row - replace with your parts
+12/2 Romex Wire (250ft),WIR-122,WIR,89.00,Example row - replace with your parts
+15A Duplex Receptacle,OUT-15D,OUT,2.25,Example row - replace with your parts
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+CATEGORY CODE REFERENCE - DO NOT EDIT BELOW THIS LINE,,,,
+BRK,Breakers,,,Circuit breakers GFCIs AFCIs disconnects
+WIR,Wiring & Cable,,,Romex THHN conduit and connectors
+OUT,Outlets & Switches,,,Receptacles switches dimmers plates
+PAN,Panels,,,Service panels sub-panels load centers
+MOT,Motors & Drives,,,Motors VFDs contactors and relays
+LGT,Lighting,,,Fixtures ballasts drivers and lamps
+MIS,Miscellaneous,,,Transformers fuses fittings other parts
+ADD YOUR OWN CATEGORY CODES BELOW IF NEEDED,,,,
+,,,,
+,,,,
+,,,,
+`,
+  electrical_contacts: `Name,Phone Number,Email,Role
+Office Dispatch,555-123-4567,office@yourcompany.com,Office
+Main Supply House,555-123-4580,supply@yourcompany.com,Supply House
+Field Electrician,555-123-4590,tech@yourcompany.com,Electrician
+Johnson Building,555-987-6543,,Customer
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+ROLE OPTIONS - DO NOT EDIT BELOW THIS LINE,,,
+Office,Front office / dispatch contacts,,
+Supply House,Electrical supplier / warehouse / counter,,
+Electrician,Field electricians,,
+Customer,Job site / customer contacts,,
+`,
+  hvac_parts: `Part Name,Part Number,Category Code,Price,Notes
+45/5 MFD Dual Run Capacitor,CAP-455,CAP,18.50,Example row - replace with your parts
+1/3 HP Condenser Fan Motor,MTR-13C,MOT,96.00,Example row - replace with your parts
+40A 2-Pole Contactor,CON-402,CON,24.75,Example row - replace with your parts
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+CATEGORY CODE REFERENCE - DO NOT EDIT BELOW THIS LINE,,,,
+CAP,Capacitors,,,Run and start capacitors
+MOT,Motors,,,Condenser and blower motors
+CON,Contactors,,,Contactors and relays
+FLT,Filters,,,Air filters and filter media
+TST,Thermostats,,,Programmable and manual thermostats
+MIS,Miscellaneous,,,Valves TXV transformers refrigerant tools etc
+ADD YOUR OWN CATEGORY CODES BELOW IF NEEDED,,,,
+,,,,
+,,,,
+,,,,
+`,
+  hvac_contacts: `Name,Phone Number,Email,Role
+Apex Dispatch Office,555-123-4567,dispatch@yourcompany.com,Office
+Main Parts Desk,555-123-4580,parts@yourcompany.com,Parts Desk
+John Smith,555-123-4590,jsmith@yourcompany.com,Tech
+Smith Residence,555-987-6543,,Customer
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+ROLE OPTIONS - DO NOT EDIT BELOW THIS LINE,,,
+Office,Front office / dispatch contacts,,
+Parts Desk,Parts counter / warehouse / supplier,,
+Tech,Field technicians,,
+Customer,Job site / customer contacts,,
+`,
+  plumbing_parts: `Part Name,Part Number,Category Code,Price,Notes
+1/2" Copper Pipe (10ft),PIP-12C,PIP,21.00,Example row - replace with your parts
+3/4" PVC Ball Valve,VLV-34B,VLV,9.80,Example row - replace with your parts
+Wax Toilet Bowl Ring,FIX-WAX,FIX,3.25,Example row - replace with your parts
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+,,,,
+CATEGORY CODE REFERENCE - DO NOT EDIT BELOW THIS LINE,,,,
+PIP,Pipe & Fittings,,,Copper PEX PVC pipe and fittings
+VLV,Valves,,,Ball gate check and shutoff valves
+FIX,Fixtures,,,Faucets toilets sinks tubs and trim
+WTR,Water Heaters,,,Tank and tankless water heaters and parts
+DRN,Drains & Vents,,,Drain lines vents traps and cleanouts
+MIS,Miscellaneous,,,Fittings sealants tools other parts
+ADD YOUR OWN CATEGORY CODES BELOW IF NEEDED,,,,
+,,,,
+,,,,
+,,,,
+`,
+  plumbing_contacts: `Name,Phone Number,Email,Role
+Office Dispatch,555-123-4567,office@yourcompany.com,Office
+Main Supply House,555-123-4580,supply@yourcompany.com,Supply House
+Field Plumber,555-123-4590,tech@yourcompany.com,Plumber
+Johnson Building,555-987-6543,,Customer
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+ROLE OPTIONS - DO NOT EDIT BELOW THIS LINE,,,
+Office,Front office / dispatch contacts,,
+Supply House,Plumbing supplier / warehouse / counter,,
+Plumber,Field plumbers,,
+Customer,Job site / customer contacts,,
+`,
+};
+function partsTemplateCSV(trade){
+  const key=trade+'_parts';
+  return REAL_TEMPLATES[key] || REAL_TEMPLATES.hvac_parts;
+}
+function contactsTemplateCSV(trade){
+  const key=(trade||'hvac')+'_contacts';
+  return REAL_TEMPLATES[key] || REAL_TEMPLATES.hvac_contacts;
+}
+function downloadCSV(filename,text){
+  const blob=new Blob([text],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function downloadPartsTemplate(company,tradeOverride){
+  const trade = company ? (tradeOverride||'hvac') : S.trade;
+  const label=TRADES[trade]?TRADES[trade].short:'HVAC';
+  downloadCSV(`${label} Parts Template.csv`, partsTemplateCSV(trade));
+  toast('Parts template downloaded'+(company?' for '+company:''));
+}
+function downloadContactsTemplate(company){
+  const trade = company ? (panelFor(company)?.trade||'hvac') : S.trade;
+  const label=TRADES[trade]?TRADES[trade].short:'HVAC';
+  downloadCSV(`${label} Contacts Template.csv`, contactsTemplateCSV(trade));
+  toast('Contacts template downloaded'+(company?' for '+company:''));
+}
+
+/* ---- CSV handling ---- */
+function wireDrop(id){
+  const el=$(id); if(!el) return;
+  const kind = id.includes('Parts')?'parts':'contacts';
+  // recover company from suffix, e.g. dropParts__Some_Company -> "Some_Company" -> matched back to a real company name
+  const company = id.includes('__') ? (S.openPanels.find(p=>panelId(p.company)===id.split('__')[1])||{}).company : null;
+  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag');});
+  el.addEventListener('dragleave',()=>el.classList.remove('drag'));
+  el.addEventListener('drop',e=>{
+    e.preventDefault();el.classList.remove('drag');
+    const f=e.dataTransfer.files[0]; if(f){ readCSV(f, kind, company); }
+  });
+}
+function handleCSV(input,kind,company){ if(input.files[0]) readCSV(input.files[0],kind,company); }
+function readCSV(file,kind,company){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{ parseCSV(e.target.result,kind,company); }
+    catch(err){ toast('Could not read that file — check the format'); }
+  };
+  reader.readAsText(file);
+}
+function splitCSVLine(line){
+  // basic CSV split handling quoted commas
+  const out=[];let cur='';let q=false;
+  for(let i=0;i<line.length;i++){const ch=line[i];
+    if(ch==='"'){ if(q&&line[i+1]==='"'){cur+='"';i++;} else q=!q; }
+    else if(ch===','&&!q){ out.push(cur); cur=''; }
+    else cur+=ch;
+  }
+  out.push(cur); return out.map(s=>s.trim());
+}
+function parseCSV(text,kind,company){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
+  if(!lines.length){ toast('That file looks empty'); return; }
+  const panel = company ? panelFor(company) : null;
+  const trade = panel ? panel.trade : S.trade;
+  const targetParts = panel ? panel.parts : S.parts;
+  const targetContacts = panel ? panel.contacts : S.contacts;
+  // skip header row; stop at any reference/instruction row
+  let added=0, skipped=0;
+  for(let i=1;i<lines.length;i++){
+    const cells=splitCSVLine(lines[i]);
+    const first=(cells[0]||'').toUpperCase();
+    if(!cells[0]) continue;
+    if(first.includes('REFERENCE')||first.includes('DO NOT EDIT')||first.includes('CATEGORY CODE')||first.includes('ROLE OPTIONS')||first.includes('ADD YOUR')||first.includes('CUSTOM')||first.includes('INSTRUCTIONS')) break;
+    if(kind==='parts'){
+      // Part Name, Part Number, Category Code, Price, Notes
+      const knownCodes=CATS_FOR(trade).map(c=>c[0]);
+      if(knownCodes.includes(first) && !cells[1]) { skipped++; continue; }
+      targetParts.push({name:cells[0], num:(cells[1]||'').toUpperCase(), code:(cells[2]||'MIS').toUpperCase(), price:(cells[3]||'0.00'), notes:cells[4]||''});
+      added++;
+    } else {
+      // Name, Phone, Email, Role
+      const knownRoles=ROLES_FOR(trade).map(r=>r.toUpperCase());
+      if(knownRoles.includes(first) && !cells[1]) { skipped++; continue; }
+      targetContacts.push({name:cells[0], phone:cells[1]||'', email:cells[2]||'', role:cells[3]||'Customer'});
+      added++;
+    }
+  }
+  if(panel) savePanelData(panel); else persistCurrent();
+  render(); if(!panel) showTab(kind);
+  toast(added?`Loaded ${added} ${kind==='parts'?'part':'contact'}${added===1?'':'s'} from the file`+(company?' for '+company:''):'No new rows found in that file');
+}
+
+/* ---- VOICE INPUT (Web Speech API — Chrome/Edge; free, no API keys) ---- */
+function initSpeechRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ toast('Voice input needs Chrome or Edge — not supported in this browser'); return null; }
+  const sr = new SR();
+  sr.lang='en-US'; sr.continuous=false; sr.interimResults=false; sr.maxAlternatives=1;
+  return sr;
+}
+/* Match a spoken category phrase to a real category code for the current trade.
+   "pipe fittings" -> PIP, "capacitor" -> CAP, or an exact code like "PIP" also works. */
+function matchCategory(spoken, trade){
+  const cats=CATS_FOR(trade);
+  const s=spoken.toLowerCase().trim();
+  if(!s) return null;
+  const exact=cats.find(c=>c[0].toLowerCase()===s); if(exact) return exact[0];
+  const byLabel=cats.find(c=>c[1].toLowerCase().includes(s)||s.includes(c[1].toLowerCase())); if(byLabel) return byLabel[0];
+  const byWord=cats.find(c=>c[1].toLowerCase().split(/[^a-z]+/).some(w=>w.length>2&&s.includes(w))); if(byWord) return byWord[0];
+  return null;
+}
+/* Turn spoken prices into numbers: "twelve fifty"->12.50 handled by browser as "12 50",
+   "$12.50"->12.50, "twelve dollars and fifty cents"->12.50-ish. Best effort. */
+function parseSpokenPrice(s){
+  if(!s) return '';
+  let t=s.toLowerCase().replace(/dollars?|bucks?|and|cents?/g,' ').replace(/[^0-9. ]/g,' ').trim();
+  const nums=t.split(/\s+/).filter(Boolean);
+  if(!nums.length) return '';
+  if(nums.length===1) return parseFloat(nums[0]).toFixed(2);
+  // "12 50" spoken as dollars + cents
+  const d=parseFloat(nums[0]), c=parseFloat(nums[1]);
+  if(!isNaN(d)&&!isNaN(c)&&c<100&&nums[1].indexOf('.')<0) return (d+c/100).toFixed(2);
+  return parseFloat(nums[0]).toFixed(2);
+}
+function voiceInputPart(sfx){
+  const sr=initSpeechRecognition(); if(!sr) return;
+  // figure out which trade's categories to match against (panel vs client view)
+  let trade=S.trade;
+  if(sfx && sfx.startsWith('__')){
+    const p=S.openPanels.find(p=>'__'+panelId(p.company)===sfx);
+    if(p) trade=p.trade;
+  }
+  toast('🎤 Listening… say: part name, part number, category, price');
+  sr.onresult=e=>{
+    const transcript=(e.results[0][0].transcript||'').trim();
+    if(!transcript){ toast('Didn\u2019t catch that — try again'); return; }
+    const seg=transcript.split(/,/g).map(s=>s.trim()).filter(Boolean);
+    const nameEl=$('pName'+sfx), numEl=$('pNum'+sfx), codeEl=$('pCode'+sfx), priceEl=$('pPrice'+sfx);
+    if(seg[0]&&nameEl) nameEl.value=seg[0].charAt(0).toUpperCase()+seg[0].slice(1);
+    if(seg[1]&&numEl) numEl.value=seg[1].toUpperCase().replace(/\s*(DASH|HYPHEN)\s*/g,'-').replace(/\s+/g,'');
+    if(seg[2]&&codeEl){ const c=matchCategory(seg[2],trade); if(c) codeEl.value=c; }
+    if(seg[3]&&priceEl){ const pr=parseSpokenPrice(seg[3]); if(pr) priceEl.value=pr; }
+    toast('Heard: \u201C'+transcript+'\u201D — review the fields, then click Add part');
+  };
+  sr.onerror=e=>{
+    if(e.error==='not-allowed') toast('Mic blocked — allow microphone access in your browser');
+    else if(e.error==='no-speech') toast('No speech heard — click 🎤 and try again');
+    else toast('Mic error: '+e.error);
+  };
+  sr.start();
+}
+function voiceInputContact(sfx){
+  const sr=initSpeechRecognition(); if(!sr) return;
+  let trade=S.trade;
+  if(sfx && sfx.startsWith('__')){
+    const p=S.openPanels.find(p=>'__'+panelId(p.company)===sfx);
+    if(p) trade=p.trade;
+  }
+  toast('🎤 Listening… say: name, phone number, email, role');
+  sr.onresult=e=>{
+    const transcript=(e.results[0][0].transcript||'').trim();
+    if(!transcript){ toast('Didn\u2019t catch that — try again'); return; }
+    const seg=transcript.split(/,/g).map(s=>s.trim()).filter(Boolean);
+    const nameEl=$('cName'+sfx), phoneEl=$('cPhone'+sfx), emailEl=$('cEmail'+sfx), roleEl=$('cRole'+sfx);
+    if(seg[0]&&nameEl) nameEl.value=seg[0].replace(/\b\w/g,ch=>ch.toUpperCase());
+    if(seg[1]&&phoneEl){
+      const digits=seg[1].replace(/\D/g,'');
+      phoneEl.value = digits.length===10 ? digits.slice(0,3)+'-'+digits.slice(3,6)+'-'+digits.slice(6) : seg[1];
+    }
+    if(seg[2]&&emailEl) emailEl.value=seg[2].toLowerCase().replace(/\s+at\s+/g,'@').replace(/\s+dot\s+/g,'.').replace(/\s+/g,'');
+    if(seg[3]&&roleEl){
+      const spoken=seg[3].toLowerCase();
+      const match=ROLES_FOR(trade).find(r=>r.toLowerCase()===spoken||r.toLowerCase().includes(spoken)||spoken.includes(r.toLowerCase()));
+      if(match) roleEl.value=match;
+    }
+    toast('Heard: \u201C'+transcript+'\u201D — review the fields, then click Add contact');
+  };
+  sr.onerror=e=>{
+    if(e.error==='not-allowed') toast('Mic blocked — allow microphone access in your browser');
+    else if(e.error==='no-speech') toast('No speech heard — click 🎤 and try again');
+    else toast('Mic error: '+e.error);
+  };
+  sr.start();
+}
+
+/* ---- push (live once connected) ---- */
+function pushData(kind,company){
+  const panel = company ? panelFor(company) : null;
+  const list = panel ? (kind==='parts'?panel.parts:panel.contacts) : (kind==='parts'?S.parts:S.contacts);
+  if(!S.conn.connected){
+    toast('No server connected yet — set it up on the Server & API tab'+(S.role==='admin'?'':' (admin)'));
+    return;
+  }
+  // Supabase's REST API lives under /rest/v1/<table>, not at the bare project root.
+  // If the admin pasted a plain https://xxxx.supabase.co URL, add that path automatically.
+  let base = S.conn.url.replace(/\/$/,'');
+  if(/\.supabase\.co$/i.test(base)) base += '/rest/v1';
+  const endpoint = base + '/' + kind;
+  fetch(endpoint, {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+S.conn.key,
+      'apikey':S.conn.key,
+      'Prefer':'return=representation,resolution=merge-duplicates'
+    },
+    body: JSON.stringify(list)
+  })
+  .then(async r=>{
+    if(!r.ok){ const t=await r.text().catch(()=>''); throw new Error(r.status+' '+t.slice(0,200)); }
+    toast(`Pushed ${list.length} ${kind} to the cloud`);
+  })
+  .catch(err=> toast('Push failed: '+(err.message||'check the server URL and key on the admin tab')));
+}
+
+/* default role view */
+loadCustomers();
+loadConn();
+pickRole('client');
+showScreen('login'); // belt-and-suspenders: guarantee a clean single-screen start regardless of any stale inline styles
+</script>
+</body>
+</html>
